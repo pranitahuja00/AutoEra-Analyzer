@@ -7,15 +7,18 @@ import seaborn as sns
 
 st.title("AutoEra Analyzer")
 
-tab1, tab2, tab3, tab4 = st.tabs(['Data Overview', 'Data Analysis', 'Trends over years', 'Interactive Analysis and Plotting'])
+tab1, tab2, tab3, tab4 = st.tabs(['Project Overview', 'Data Analysis', 'Trends over years', 'Interactive Analysis and Plotting'])
 
 cars = pd.read_csv('https://raw.githubusercontent.com/pranitahuja00/CMSE830/main/midSem_project/Car%20Dataset%201945-2020.csv', delimiter=",", skiprows=0)
 
 
 # TAB 1
 with tab1:
+    st.subheader("Objective:")
+    st.write("This data science dashboard aims to provide valuable insights and trends in the world of automobiles over the past several decades. This dashboard will enable users to explore, visualize, and extract meaningful information from a comprehensive car dataset, helping enthusiasts, researchers, and industry professionals gain a deeper understanding of automotive evolution, performance, and technological advancements.")
     st.subheader("About the data:")
-    st.write('This dataset contains a comprehensive list of cars manufactured from 1935 to 2020. It includes details such as make, model, year, engine size, fuel type, transmission type, drivetrain, body style, number of doors, and many more specifications. The purpose of this dataset is to provide a comprehensive list of car specifications that can be used for various research and analysis purposes, such as market and trend analysis.')
+    st.write("Data Source: [Kaggle - Car Specification Dataset 1945-2020](https://www.kaggle.com/datasets/jahaidulislam/car-specification-dataset-1945-2020/data)")
+    st.write('This dataset contains a comprehensive list of cars manufactured from 1945 to 2020. It includes details such as make, model, year, engine size, fuel type, transmission type, drivetrain, body style, number of doors, and many more specifications. The purpose of this dataset is to provide a comprehensive list of car specifications that can be used for various research and analysis purposes, such as market and trend analysis.')
     st.write('Raw Data rows/ records: ', cars.shape[0])
     st.write('Raw Data columns/ features: ', cars.shape[1])
 
@@ -95,12 +98,17 @@ with tab1:
     with col3:
         st.write('Discrete: -',discrete_attr)
 
+    st.write("Since the dataset contains more than 70,000 records, I have taken random samples from the data to create a smaller dataframe for the data analysis part which will preserve the data trends and relationships while giving clearer and lighter visualizations which will take less loading time.")
 
+cars = cars.sample(n = round(cars.shape[0]/15))
 
 # TAB 2
 with tab2:
     st.subheader("Visualizing and studying data trends and relationships:")
 
+
+
+# TAB 3
 counts = cars['year'].value_counts().reset_index()
 counts.columns = ['year', 'Count']
 counts['year']=counts['year'].astype(int)
@@ -115,58 +123,62 @@ chart=alt.Chart(counts).mark_line().encode(
     y='Count'
 ).interactive()
 
-
-
-# TAB 3
 with tab3:
     st.altair_chart(chart, use_container_width=True)
     st.write("We can see an upward trend along the years till 2008 which was the peak followed by a decline.")
 
-    st.write("Let's check some trends over the years: ")
     st.write("Horsepower: ")
 cars.drop(cars[cars['horsepower']>1000].index, axis=0, inplace=True)
 hp_year_chart = alt.Chart(cars).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
-    y='horsepower',
+    y='horsepower'
 ).interactive()
-hp_year_chart_line = hp_year_chart.transform_regression('year', 'horsepower').mark_line()
+hp_year_chart_line = hp_year_chart.transform_regression('year', 'horsepower').mark_line(color='red')
 
 with tab3:
-    st.altair_chart(hp_year_chart+hp_year_chart_line, use_container_width=True)
-    st.write("The fit line shows a slight positive trend that's because of the dip in horsepower figures after the 1970s started.")
+    st.altair_chart((hp_year_chart+hp_year_chart_line), use_container_width=True)
+    st.write("The fit line shows a slight positive trend instead of a strong one that's because of the dip in horsepower figures after the 1970s started.")
 
     st.write("Acceleration: ")
 acc_year_chart = alt.Chart(cars).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='acceleration',
 ).interactive()
-acc_year_chart_line = acc_year_chart.transform_regression('year', 'acceleration').mark_line()
+acc_year_chart_line = acc_year_chart.transform_regression('year', 'acceleration').mark_line(color='red')
 
 with tab3:
     st.altair_chart(acc_year_chart+acc_year_chart_line, use_container_width=True)
     st.write("We can see that with time average time to accelerate from 0-100 kmph has gone down due to advances in engineering.")
 
-    st.write("Fuel Economy:")
-kmpl_year_chart = alt.Chart(cars).mark_circle().encode(
+    st.write("Top Speed:")
+speed_year_chart = alt.Chart(cars).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
-    y='avg_kmpl',
+    y='top_speed',
 ).interactive()
-kmpl_year_chart_line = kmpl_year_chart.transform_regression('year', 'avg_kmpl').mark_line()
+speed_year_chart_line = speed_year_chart.transform_regression('year', 'top_speed').mark_line(color='red')
 
 with tab3:
-    st.altair_chart(kmpl_year_chart+kmpl_year_chart_line, use_container_width=True)
-    st.write("According to this dataset the fuel economy of cars has gotten worse over time and is on the decline.")
+    st.altair_chart(speed_year_chart+speed_year_chart_line, use_container_width=True)
+    st.write("The top speed (km/h) of cars has increased over the decades and is still on the rise due to advances in engineering and aerodynamics.")
 
 cars['displacement']=cars['displacement'].astype(float)
 disp_year_chart = alt.Chart(cars).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='displacement',
 ).interactive()
-disp_year_chart_line = disp_year_chart.transform_regression('year', 'displacement').mark_line()
+disp_year_chart_line = disp_year_chart.transform_regression('year', 'displacement').mark_line(color='red')
 
 with tab3:
     st.altair_chart(disp_year_chart+disp_year_chart_line, use_container_width=True)
-    st.write("Average displacement of cars has gone down along the years as we move forward to more fuel efficient vehicles which can give better performance with a smaller engine.")
+    st.write("Average displacement of cars has gone down along the years as we move forward to more fuel efficient vehicles which can give better performance with a smaller engine thus requiring less fuel for the same distance.")
+
+    st.subheader("Check trends of other attributes over the years:")
+    selected_column_toy = st.selectbox("Select attribute", continuous_attr, key=4)
+    chart_line_check_toy = st.checkbox("Show Regression Line", key=5)
+    if selected_column_toy:
+        chart_toy = alt.Chart(cars).mark_circle().encode(x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])), y=selected_column_toy).interactive()
+        chart_line_toy = chart_toy.transform_regression('year', selected_column_toy).mark_line(color='red')
+        st.altair_chart(chart_toy+chart_line_toy if chart_line_check_toy else chart_toy, theme="streamlit", use_container_width=True)
 
 
 
@@ -178,5 +190,5 @@ with tab4:
     chart_line_check = st.checkbox("Show Regression Line", key=1)
     if selected_column1:
         chart2 = alt.Chart(cars).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
-        chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line()
+        chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line(color='red')
         st.altair_chart(chart2+chart_line2 if chart_line_check else chart2, theme="streamlit", use_container_width=True)

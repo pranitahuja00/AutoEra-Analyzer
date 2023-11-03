@@ -117,6 +117,7 @@ counts['year']=counts['year'].astype(int)
 counts = counts.sort_values(by='year')
 
 with tab3:
+    st.subheader("Visualizing and understanding how attributes were affected over the years:")
     st.write('Distribution of the car records over the years:')
 chart=alt.Chart(counts).mark_line().encode(
     x='year',
@@ -174,7 +175,7 @@ with tab3:
 
     st.subheader("Check trends of other attributes over the years:")
     selected_column_toy = st.selectbox("Select attribute", continuous_attr, key=4)
-    chart_line_check_toy = st.checkbox("Show Regression Line", key=5)
+    chart_line_check_toy = st.checkbox("Show Regression Line", key=5, value=True)
     if selected_column_toy:
         chart_toy = alt.Chart(cars).mark_circle().encode(x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])), y=selected_column_toy).interactive()
         chart_line_toy = chart_toy.transform_regression('year', selected_column_toy).mark_line(color='red')
@@ -187,7 +188,7 @@ with tab4:
     st.subheader("Check the relationship between attributes:")
     selected_column1 = st.selectbox("Select attribute", continuous_attr, key=2)
     selected_column2 = st.selectbox("Select attribute", continuous_attr, key=3)
-    chart_line_check = st.checkbox("Show Regression Line", key=1)
+    chart_line_check = st.checkbox("Show Regression Line", key=1, value=True)
     if selected_column1:
         chart2 = alt.Chart(cars).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
         chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line(color='red')

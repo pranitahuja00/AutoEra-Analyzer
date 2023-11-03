@@ -105,6 +105,7 @@ cars = cars.sample(n = round(cars.shape[0]/15))
 # TAB 2
 with tab2:
     st.subheader("Visualizing and studying data trends and relationships:")
+    
 
 
 

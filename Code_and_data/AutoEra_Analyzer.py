@@ -4,6 +4,7 @@ import numpy as np
 import altair as alt
 import matplotlib.pyplot as plt
 import seaborn as sns
+from altair import datum
 
 st.title("AutoEra Analyzer")
 
@@ -70,8 +71,8 @@ cars['drive_wheels'].replace('All wheel drive (AWD)', 'AWD', inplace=True)
 cars['drive_wheels'].replace('Four wheel drive (4WD)', '4WD', inplace=True)
 cars['drive_wheels'].replace('full', '4WD', inplace=True)
 cars['drive_wheels'].replace('Constant all wheel drive', '4WD', inplace=True)
-for i in ['robot','Continuously variable transmission (CVT)','Electronic with 1 clutch', 'Electronic with 2 clutch']:
-    cars['transmission'].replace(i, 'Automatic', inplace=True)
+for i in ['robot','continuously variable transmission (cvt)','electronic with 1 clutch', 'electronic with 2 clutch']:
+    cars['transmission'].replace(i, 'automatic', inplace=True)
 for i in ['ventilated disc','Disc', 'Disc ventilated','Disc composite, ventilated', 'Disc composite','ventilated ceramic', 'ventilated disc, perforated','Disk ceramic']:
     cars['brakes'].replace(i,'disc', inplace=True)
 cars['brakes'].replace('N/a', np.nan, inplace=True)
@@ -106,6 +107,7 @@ def countFunc(column_name, data_type):
     counts.columns = [column_name, 'count']
     counts[column_name]=counts[column_name].astype(data_type)
     counts = pd.DataFrame(counts)
+    counts['year_1'] = cars['year']
     return counts
 
 # TAB 2
@@ -120,6 +122,7 @@ make_dist_chart=alt.Chart(countFunc('make',str)).mark_bar().encode(
 with tab2:
     st.write("Car manufacturer distribution:")
     st.altair_chart(make_dist_chart)
+    st.write("We can see that most of the cars in the dataset have been manifactured by Cheverolet, followed by other top manufacturers such as Toyota, Volkswagen, Mercedez-Benz, BMW, Nissan, Audi, Opel and Mazda.")
 
 trans_dist_chart=alt.Chart(countFunc('transmission',str)).mark_bar().encode(
     x='transmission',
@@ -127,9 +130,11 @@ trans_dist_chart=alt.Chart(countFunc('transmission',str)).mark_bar().encode(
     color='transmission'
 ).interactive().properties(width=800, height=400)
 
+
 with tab2:
     st.write("Car transmission distribution:")
     st.altair_chart(trans_dist_chart)
+    st.write("We can see that manual transmission cars are dominating the dataset by a small margin here, an in depth analysis over time can be seen on the next tab.")
 
 fuel_dist_chart=alt.Chart(countFunc('fuel',str)).mark_bar().encode(
     x='fuel',
@@ -140,6 +145,7 @@ fuel_dist_chart=alt.Chart(countFunc('fuel',str)).mark_bar().encode(
 with tab2:
     st.write("Car fuel type distribution:")
     st.altair_chart(fuel_dist_chart)
+    st.write("It is very clear that Petrol engines have been the most widely used engines for cars followed by Diesel then Hybrid, Electic motors, Hydrogen ones and Rotors.")
 
 cyl_dist_chart=alt.Chart(countFunc('cylinders',str)).mark_bar().encode(
     x='cylinders',
@@ -150,8 +156,20 @@ cyl_dist_chart=alt.Chart(countFunc('cylinders',str)).mark_bar().encode(
 with tab2:
     st.write("Car cylinders distribution:")
     st.altair_chart(cyl_dist_chart)
+    st.write("We can clearly see that 4 cylinder cars have been the most common road cars followed by 6 and 8 cylinders ones. It is very rare for cars to have 1 or 7 cylinders, and only a few expensive hypercars can be seen with 16 cylinders.")
 
-cars = cars.sample(n = round(cars.shape[0]/15))
+cylLayout_dist_chart=alt.Chart(countFunc('cylinder_layout',str)).mark_bar().encode(
+    x='cylinder_layout',
+    y=alt.Y('count').scale(type="log"),
+    color='cylinder_layout'
+).interactive().properties(width=800, height=400)
+
+with tab2:
+    st.write("Car cylinder layouts distribution:")
+    st.altair_chart(cylLayout_dist_chart)
+    st.write("The chart shows that an Inline cylinder layout is the most widely used among road cars, followed by V-Type layout which is mostly seen in high performance supercars. Opposed layout comes in at third followed by W-Type which is only seen in really expensive hypercars and then Rotor which was just used in some very old cars.")
+
+cars_sample = cars.sample(n = round(cars.shape[0]/15))
 
 # TAB 3
 with tab3:
@@ -166,42 +184,85 @@ with tab3:
     st.altair_chart(chart, use_container_width=True)
     st.write("We can see an upward trend along the years till the early 2000s which was a peak era followed by a decline.")
 
-    st.write("Horsepower: ")
-cars.drop(cars[cars['horsepower']>1000].index, axis=0, inplace=True)
-hp_year_chart = alt.Chart(cars).mark_circle().encode(
+
+trans_line_chart=alt.Chart(cars).mark_line().encode(
+    x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
+    y=alt.Y('count()').scale(type="log"),
+    color='transmission'
+).transform_filter(datum.transmission!=None).interactive().properties(width=800, height=400)
+
+with tab3:
+    st.write("Transmission types over time:")
+    st.altair_chart(trans_line_chart)
+
+fuel_line_chart=alt.Chart(cars).mark_line().encode(
+    x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
+    y=alt.Y('count()').scale(type="log"),
+    color='fuel'
+).transform_filter(datum.fuel!=None).interactive().properties(width=800, height=400)
+
+with tab3:
+    st.write("Fuel types over time:")
+    st.altair_chart(fuel_line_chart)
+
+cyl_line_chart=alt.Chart(cars).mark_circle().encode(
+    x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
+    y=alt.Y('count()').scale(type="log"),
+    color='cylinders:N'
+).transform_filter(datum.cylinders!=None).interactive().properties(width=800, height=400)
+
+with tab3:
+    st.write("Number of cylinders over time:")
+    st.altair_chart(cyl_line_chart)
+
+cylLayout_line_chart=alt.Chart(cars).mark_line().encode(
+    x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
+    y=alt.Y('count()'),
+    color='cylinder_layout:N'
+).transform_filter(datum.cylinder_layout!=None).interactive().properties(width=800, height=400)
+
+with tab3:
+    st.write("Cylinder layouts over time:")
+    st.altair_chart(cylLayout_line_chart)
+
+cars_sample.drop(cars_sample[cars_sample['horsepower']>1000].index, axis=0, inplace=True)
+hp_year_chart = alt.Chart(cars_sample).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='horsepower'
 ).interactive()
 hp_year_chart_line = hp_year_chart.transform_regression('year', 'horsepower').mark_line(color='red')
 
 with tab3:
+    st.write("Horsepower: ")
     st.altair_chart((hp_year_chart+hp_year_chart_line), use_container_width=True)
     st.write("The fit line shows a slight positive trend instead of a strong one that's because of the dip in horsepower figures after the 1970s started.")
 
-    st.write("Acceleration: ")
-acc_year_chart = alt.Chart(cars).mark_circle().encode(
+    
+acc_year_chart = alt.Chart(cars_sample).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='acceleration',
 ).interactive()
 acc_year_chart_line = acc_year_chart.transform_regression('year', 'acceleration').mark_line(color='red')
 
 with tab3:
+    st.write("Acceleration: ")
     st.altair_chart(acc_year_chart+acc_year_chart_line, use_container_width=True)
     st.write("We can see that with time average time to accelerate from 0-100 kmph has gone down due to advances in engineering.")
 
-    st.write("Top Speed:")
-speed_year_chart = alt.Chart(cars).mark_circle().encode(
+    
+speed_year_chart = alt.Chart(cars_sample).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='top_speed',
 ).interactive()
 speed_year_chart_line = speed_year_chart.transform_regression('year', 'top_speed').mark_line(color='red')
 
 with tab3:
+    st.write("Top Speed:")
     st.altair_chart(speed_year_chart+speed_year_chart_line, use_container_width=True)
     st.write("The top speed (km/h) of cars has increased over the decades and is still on the rise due to advances in engineering and aerodynamics.")
 
-cars['displacement']=cars['displacement'].astype(float)
-disp_year_chart = alt.Chart(cars).mark_circle().encode(
+cars_sample['displacement']=cars_sample['displacement'].astype(float)
+disp_year_chart = alt.Chart(cars_sample).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
     y='displacement',
 ).interactive()
@@ -216,7 +277,7 @@ with tab3:
     selected_column_toy = st.selectbox("Select attribute", continuous_attr, key=4)
     chart_line_check_toy = st.checkbox("Show Regression Line", key=5, value=True)
     if selected_column_toy:
-        chart_toy = alt.Chart(cars).mark_circle().encode(x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])), y=selected_column_toy).interactive()
+        chart_toy = alt.Chart(cars_sample).mark_circle().encode(x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])), y=selected_column_toy).interactive()
         chart_line_toy = chart_toy.transform_regression('year', selected_column_toy).mark_line(color='red')
         st.altair_chart(chart_toy+chart_line_toy if chart_line_check_toy else chart_toy, theme="streamlit", use_container_width=True)
 
@@ -227,6 +288,6 @@ with tab4:
     selected_column2 = st.selectbox("Select attribute", continuous_attr, key=3)
     chart_line_check = st.checkbox("Show Regression Line", key=1, value=True)
     if selected_column1:
-        chart2 = alt.Chart(cars).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
+        chart2 = alt.Chart(cars_sample).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
         chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line(color='red')
         st.altair_chart(chart2+chart_line2 if chart_line_check else chart2, theme="streamlit", use_container_width=True)

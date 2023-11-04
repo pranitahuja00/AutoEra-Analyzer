@@ -8,7 +8,7 @@ from altair import datum
 
 st.title("AutoEra Analyzer")
 
-tab1, tab2, tab3, tab4 = st.tabs(['Project Overview', 'Data Analysis', 'Trends over years', 'Interactive Analysis and Plotting'])
+tab1, tab2, tab3, tab4 = st.tabs(['Project Overview', 'Data Analysis', 'Trends over years', 'Conclusion'])
 
 cars = pd.read_csv('https://raw.githubusercontent.com/pranitahuja00/CMSE830/main/midSem_project/Car%20Dataset%201945-2020.csv', delimiter=",", skiprows=0)
 
@@ -79,7 +79,7 @@ cars['brakes'].replace('N/a', np.nan, inplace=True)
 cars.drop(cars.columns[0], axis=1,inplace=True)
 
 with tab1:
-    st.write("After removing some columns, I created a few features such as 'bs_ratio'. Bore-Stroke ratio ('bs_ratio') is the ratio of the piston diameter and the stroke length. The dataset had two columns for the piston diameter and stroke length, so I calculated the ratio as that is more useful and dropped the bore and stroke columns.")
+    st.write("After dropping these columns, I had to perform manual data cleaning by going through each categorical column and renaming certain value to maintan a proper format and avoif having same values under different names which would negatively affect my visualizations.")
     st.write("A preview of the new dataset: -", cars.head())
     st.write("New shape: ", cars.shape)
 
@@ -164,12 +164,23 @@ cylLayout_dist_chart=alt.Chart(countFunc('cylinder_layout',str)).mark_bar().enco
     color='cylinder_layout'
 ).interactive().properties(width=800, height=400)
 
+cars_sample = cars.sample(n = round(cars.shape[0]/15))
+
 with tab2:
     st.write("Car cylinder layouts distribution:")
     st.altair_chart(cylLayout_dist_chart)
     st.write("The chart shows that an Inline cylinder layout is the most widely used among road cars, followed by V-Type layout which is mostly seen in high performance supercars. Opposed layout comes in at third followed by W-Type which is only seen in really expensive hypercars and then Rotor which was just used in some very old cars.")
 
-cars_sample = cars.sample(n = round(cars.shape[0]/15))
+    st.subheader("Check the relationship between attributes:")
+    selected_column1 = st.selectbox("Select attribute", continuous_attr, key=2)
+    selected_column2 = st.selectbox("Select attribute", continuous_attr, key=3)
+    chart_line_check = st.checkbox("Show Regression Line", key=1, value=True)
+    if selected_column1:
+        chart2 = alt.Chart(cars_sample).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
+        chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line(color='red')
+        st.altair_chart(chart2+chart_line2 if chart_line_check else chart2, theme="streamlit", use_container_width=True)
+
+
 
 # TAB 3
 with tab3:
@@ -194,6 +205,7 @@ trans_line_chart=alt.Chart(cars).mark_line().encode(
 with tab3:
     st.write("Transmission types over time:")
     st.altair_chart(trans_line_chart)
+    st.write("Both manual and automatic transmissions have been equally popular in cars. Manual transmission being the older one takes the majority among older cars but automatic started to get more popular duting the early 2000s.")
 
 fuel_line_chart=alt.Chart(cars).mark_line().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
@@ -204,6 +216,7 @@ fuel_line_chart=alt.Chart(cars).mark_line().encode(
 with tab3:
     st.write("Fuel types over time:")
     st.altair_chart(fuel_line_chart)
+    st.write("Petrol can be seen as the oldest fuel types for cars in this chart which obviously has been the most popular fuel type followed bu Diesel which was introduced later but couldn't catch up to Petrol. Both these fuel types however started to decline in popularity after the early 2000s as people started becoming more conscious abou the environment and started moving towards Hybrid, electric and even Hydrogen based vehicles.")
 
 cyl_line_chart=alt.Chart(cars).mark_circle().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
@@ -214,6 +227,7 @@ cyl_line_chart=alt.Chart(cars).mark_circle().encode(
 with tab3:
     st.write("Number of cylinders over time:")
     st.altair_chart(cyl_line_chart)
+    st.write("4 cylinders engines have always been one of the most popular ones for several decades and became the most popular during the 1970s era before which 8 cylinder engines held the throne. Now 4 cylinder ones are followed by 6 cylidner engines used in performance sports cars. 10 and 12 cylinder engines also started to become popular in high performance supercars starting from 1980s.")
 
 cylLayout_line_chart=alt.Chart(cars).mark_line().encode(
     x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])),
@@ -224,6 +238,7 @@ cylLayout_line_chart=alt.Chart(cars).mark_line().encode(
 with tab3:
     st.write("Cylinder layouts over time:")
     st.altair_chart(cylLayout_line_chart)
+    st.write("Inline cylinder layoust were the first ones to be used in road cars as conveyed by this chart which was followed by the Opposed layout which didn't take off much, but V-Type engines started getting popular during the 1950s and became the second most popular engine layouts and the most popular among expensive performance cars. However, Inline layouts are still the most common among Inernal Combustion Engine cars as they are present in almost every normal road car.")
 
 cars_sample.drop(cars_sample[cars_sample['horsepower']>1000].index, axis=0, inplace=True)
 hp_year_chart = alt.Chart(cars_sample).mark_circle().encode(
@@ -283,11 +298,7 @@ with tab3:
 
 # TAB 4
 with tab4:
-    st.subheader("Check the relationship between attributes:")
-    selected_column1 = st.selectbox("Select attribute", continuous_attr, key=2)
-    selected_column2 = st.selectbox("Select attribute", continuous_attr, key=3)
-    chart_line_check = st.checkbox("Show Regression Line", key=1, value=True)
-    if selected_column1:
-        chart2 = alt.Chart(cars_sample).mark_circle().encode(x=selected_column1, y=selected_column2).interactive()
-        chart_line2 = chart2.transform_regression(selected_column1, selected_column2).mark_line(color='red')
-        st.altair_chart(chart2+chart_line2 if chart_line_check else chart2, theme="streamlit", use_container_width=True)
+    st.subheader("Conclusion:")
+    st.write("Modern cars have adopted smaller engines with time in pursuit of better fuel economy while not compromising on performance. Top speed and acceleration have shown continuous improvement over several decades. These advancements are the result of breakthroughs in various fields of Science and Engineering. Performance gains have been achieved through aerodynamics, electronic systems and electric motors, replacing the need for big, bulky engines.")
+    st.write("In summary, this project has unveiled the remarkable evolution of cars over several decades, showcasing the consistent improvement in performance and the shift towards eco-friendly vehicles. It highlights the intersection of technological progress and environmental awareness in shaping the automotive landscape, suggesting a promising future where performance and sustainability coexist in the world of automobiles.")
+    

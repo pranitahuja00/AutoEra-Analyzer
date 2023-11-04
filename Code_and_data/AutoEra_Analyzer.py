@@ -83,7 +83,7 @@ with tab1:
     st.write("New shape: ", cars.shape)
 
     st.write("Categorzing the attributes: -")
-categorical_attr = ['Make', 'Model', 'Generation', 'Series', 'Trim', 'body_type', 'injection_type', 'cylinder_layout', 'fuel', 'boost_type', 'intercooler', 'drive_wheels', 'transmission', 'brakes', 'suspension']
+categorical_attr = ['make', 'model', 'generation', 'series', 'trim', 'body_type', 'injection_type', 'cylinder_layout', 'fuel', 'boost_type', 'intercooler', 'drive_wheels', 'transmission', 'brakes', 'suspension']
 continuous_attr = ['length', 'width', 'height', 'wheelbase', 'front_track', 'rear_track','weight', 'ground_clearance', 'trunk_capacity', 'torque','displacement','horsepower','turning_radius', 'avg_kmpl', 'fuel_capacity', 'acceleration', 'top_speed','bs_ratio']
 discrete_attr = ['year', 'cylinders', 'valves_per_cylinder', 'gears']
 
@@ -99,35 +99,72 @@ with tab1:
         st.write('Discrete: -',discrete_attr)
 
     st.write("Since the dataset contains more than 70,000 records, I have taken random samples from the data to create a smaller dataframe for the data analysis part which will preserve the data trends and relationships while giving clearer and lighter visualizations which will take less loading time.")
+    
 
-cars = cars.sample(n = round(cars.shape[0]/15))
+def countFunc(column_name, data_type):
+    counts = cars[column_name].value_counts().reset_index()
+    counts.columns = [column_name, 'count']
+    counts[column_name]=counts[column_name].astype(data_type)
+    counts = pd.DataFrame(counts)
+    return counts
 
 # TAB 2
 with tab2:
     st.subheader("Visualizing and studying data trends and relationships:")
     
+make_dist_chart=alt.Chart(countFunc('make',str)).mark_bar().encode(
+    x='make',
+    y=alt.Y('count').scale(type="log")
+).interactive().properties(width=800, height=500)
 
+with tab2:
+    st.write("Car manufacturer distribution:")
+    st.altair_chart(make_dist_chart)
 
+trans_dist_chart=alt.Chart(countFunc('transmission',str)).mark_bar().encode(
+    x='transmission',
+    y=alt.Y('count').scale(type="log"),
+    color='transmission'
+).interactive().properties(width=800, height=400)
+
+with tab2:
+    st.write("Car transmission distribution:")
+    st.altair_chart(trans_dist_chart)
+
+fuel_dist_chart=alt.Chart(countFunc('fuel',str)).mark_bar().encode(
+    x='fuel',
+    y=alt.Y('count').scale(type="log"),
+    color='fuel'
+).interactive().properties(width=800, height=400)
+
+with tab2:
+    st.write("Car fuel type distribution:")
+    st.altair_chart(fuel_dist_chart)
+
+cyl_dist_chart=alt.Chart(countFunc('cylinders',str)).mark_bar().encode(
+    x='cylinders',
+    y=alt.Y('count').scale(type="log"),
+    color='cylinders'
+).interactive().properties(width=800, height=400)
+
+with tab2:
+    st.write("Car cylinders distribution:")
+    st.altair_chart(cyl_dist_chart)
+
+cars = cars.sample(n = round(cars.shape[0]/15))
 
 # TAB 3
-counts = cars['year'].value_counts().reset_index()
-counts.columns = ['year', 'Count']
-counts['year']=counts['year'].astype(int)
-
-# Sort the DataFrame by 'Value' if needed
-counts = counts.sort_values(by='year')
-
 with tab3:
     st.subheader("Visualizing and understanding how attributes were affected over the years:")
     st.write('Distribution of the car records over the years:')
-chart=alt.Chart(counts).mark_line().encode(
+chart=alt.Chart(countFunc('year',int)).mark_line().encode(
     x='year',
-    y='Count'
+    y='count'
 ).interactive()
 
 with tab3:
     st.altair_chart(chart, use_container_width=True)
-    st.write("We can see an upward trend along the years till 2008 which was the peak followed by a decline.")
+    st.write("We can see an upward trend along the years till the early 2000s which was a peak era followed by a decline.")
 
     st.write("Horsepower: ")
 cars.drop(cars[cars['horsepower']>1000].index, axis=0, inplace=True)
@@ -174,6 +211,7 @@ with tab3:
     st.altair_chart(disp_year_chart+disp_year_chart_line, use_container_width=True)
     st.write("Average displacement of cars has gone down along the years as we move forward to more fuel efficient vehicles which can give better performance with a smaller engine thus requiring less fuel for the same distance.")
 
+with tab3:
     st.subheader("Check trends of other attributes over the years:")
     selected_column_toy = st.selectbox("Select attribute", continuous_attr, key=4)
     chart_line_check_toy = st.checkbox("Show Regression Line", key=5, value=True)
@@ -181,8 +219,6 @@ with tab3:
         chart_toy = alt.Chart(cars).mark_circle().encode(x=alt.X('year', scale=alt.Scale(domain=[1935, 2021])), y=selected_column_toy).interactive()
         chart_line_toy = chart_toy.transform_regression('year', selected_column_toy).mark_line(color='red')
         st.altair_chart(chart_toy+chart_line_toy if chart_line_check_toy else chart_toy, theme="streamlit", use_container_width=True)
-
-
 
 # TAB 4
 with tab4:
